@@ -40,7 +40,7 @@ impl Operator {
             Self::Exponent => 3,
         }
     }
-    
+
     pub fn associativity(&self) -> Associativity {
         match self {
             Self::Add | Self::Subtract | Self::Multiply | Self::Divide => Associativity::Left,
@@ -48,5 +48,3 @@ impl Operator {
         }
     }
 }
-
-

@@ -1,57 +1,57 @@
-use crate::Token;
-use crate::Operator;
 use crate::Associativity;
+use crate::Operator;
+use crate::Token;
 
 /// Converts an infix expression to a reverse polish notation expression
 pub fn to_rpn(exp: Vec<Token>) -> Vec<Token> {
     let mut stack = Vec::new();
     let mut output = Vec::new();
-    
+
     for token in &exp {
         match token {
             Token::Op(op) => {
                 while let Some(Token::Op(top)) = stack.last() {
-                    if (op.associativity() == Associativity::Left && op.precedence() <= top.precedence()) 
-                    || (op.associativity() == Associativity::Right && op.precedence() < top.precedence())  {
+                    if (op.associativity() == Associativity::Left
+                        && op.precedence() <= top.precedence())
+                        || (op.associativity() == Associativity::Right
+                            && op.precedence() < top.precedence())
+                    {
                         output.push(stack.pop().unwrap());
-                    }
-                    else {
+                    } else {
                         break;
                     }
                 }
-                
+
                 stack.push(*token);
             }
-            
+
             Token::LParen => stack.push(*token),
             Token::RParen => {
                 while let Some(p) = stack.pop() {
                     if p != Token::LParen {
                         output.push(p);
-                    }
-                    else {
+                    } else {
                         break;
                     }
                 }
             }
-            
+
             _ => output.push(*token),
         }
     }
-    
+
     while let Some(t) = stack.pop() {
         output.push(t);
     }
-    
-    return output;
+
+    output
 }
 
 #[cfg(test)]
 mod rpn_tests {
     use super::*;
-    use crate::Token::*;
-    use crate::Operator;
     use crate::parse;
+    use crate::Token::*;
 
     #[test]
     fn parse_to_rpn() {

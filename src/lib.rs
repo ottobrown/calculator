@@ -1,5 +1,6 @@
 mod parse;
-mod token;
+mod rpn;
+pub mod token;
 
 pub use parse::parse;
 pub use token::*;

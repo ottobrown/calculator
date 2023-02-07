@@ -6,6 +6,12 @@ pub enum Token {
     RParen,
 }
 
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum Associativity {
+    Left,
+    Right,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Operator {
     Add,
@@ -24,4 +30,23 @@ impl Operator {
             Self::Exponent => left.powf(right),
         }
     }
+
+    pub fn precedence(&self) -> u8 {
+        match self {
+            Self::Add => 1,
+            Self::Subtract => 1,
+            Self::Multiply => 2,
+            Self::Divide => 2,
+            Self::Exponent => 3,
+        }
+    }
+    
+    pub fn associativity(&self) -> Associativity {
+        match self {
+            Self::Add | Self::Subtract | Self::Multiply | Self::Divide => Associativity::Left,
+            Self::Exponent => Associativity::Right,
+        }
+    }
 }
+
+

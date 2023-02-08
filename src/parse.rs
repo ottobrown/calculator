@@ -1,9 +1,10 @@
 use crate::token::Operator;
 use crate::token::Token;
+use crate::CalculatorError;
 
 /// Parse a `String` into a `Vec` of tokens
 #[allow(unused_assignments)]
-pub fn parse(s: String) -> Result<Vec<Token>, ParseError> {
+pub fn parse(s: String) -> Result<Vec<Token>, CalculatorError> {
     let mut expression = Vec::new();
     let mut number = ParseNumber::default();
 
@@ -34,7 +35,7 @@ pub fn parse(s: String) -> Result<Vec<Token>, ParseError> {
             '(' => Token::LParen,
             ')' => Token::RParen,
 
-            _ => return Err(ParseError::IllegalCharacter(c)),
+            _ => return Err(CalculatorError::IllegalCharacter(c)),
         });
     }
 
@@ -44,11 +45,6 @@ pub fn parse(s: String) -> Result<Vec<Token>, ParseError> {
     }
 
     Ok(expression)
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ParseError {
-    IllegalCharacter(char),
 }
 
 /// A base-10 number in the process of being parsed

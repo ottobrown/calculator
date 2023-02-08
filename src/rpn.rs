@@ -1,5 +1,4 @@
 use crate::Associativity;
-use crate::Operator;
 use crate::Token;
 
 /// Converts an infix expression to a reverse polish notation expression
@@ -47,11 +46,34 @@ pub fn to_rpn(exp: Vec<Token>) -> Vec<Token> {
     output
 }
 
+/// Evaluate a reverse-polish notation expression
+// TODO: handle errors
+pub fn eval_rpn(rpn: Vec<Token>) -> Result<f64, crate::CalculatorError> {
+    let mut stack: Vec<f64> = Vec::new();
+
+    for token in rpn {
+        match token {
+            Token::Number(n) => stack.push(n),
+            Token::Op(o) => {
+                let a = stack.pop().unwrap();
+                let b = stack.pop().unwrap();
+
+                stack.push(o.operate(b, a));
+            },
+
+            _ => {}
+        }
+    }
+
+    Ok(stack.pop().unwrap())
+}
+
 #[cfg(test)]
 mod rpn_tests {
     use super::*;
     use crate::parse;
     use crate::Token::*;
+    use crate::Operator;
 
     #[test]
     fn parse_to_rpn() {
@@ -72,6 +94,26 @@ mod rpn_tests {
                 Op(Operator::Add),
                 Op(Operator::Add),
             ]
+        );
+    }
+
+    #[test]
+    fn eval() {
+        assert_eq!(
+            eval_rpn(vec![
+                Number(6.0),
+                Number(9.0),
+                Op(Operator::Add),
+                Number(4.0),
+                Number(2.0),
+                Op(Operator::Multiply),
+                Number(4.0),
+                Number(2.0),
+                Op(Operator::Exponent),
+                Op(Operator::Add),
+                Op(Operator::Add),
+            ]).unwrap(),
+            39.0
         );
     }
 }

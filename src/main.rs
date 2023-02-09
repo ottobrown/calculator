@@ -1,13 +1,20 @@
 use calculator::eval;
+use calculator::CalculatorError;
 
 fn main() {
     loop {
-        let mut input = String::new();
-        std::io::stdin().read_line(&mut input);
-
-        match eval(input) {
-            Ok(n) => println!("{n}"),
+        match repl() {
+            Ok(_) => {}
             Err(e) => eprintln!("{e:?}"),
         }
     }
+}
+
+fn repl() -> Result<(), CalculatorError> {
+    let mut input = String::new();
+    std::io::stdin().read_line(&mut input)?;
+
+    println!("{:?}", eval(input)?);
+
+    Ok(())
 }

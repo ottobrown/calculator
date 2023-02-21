@@ -1,6 +1,8 @@
 use calculator::eval;
 use calculator::CalculatorError;
 
+use std::io::{stdin, stdout, Write};
+
 fn main() {
     loop {
         match repl() {
@@ -11,10 +13,23 @@ fn main() {
 }
 
 fn repl() -> Result<(), CalculatorError> {
-    let mut input = String::new();
-    std::io::stdin().read_line(&mut input)?;
+    // reset colors
+    stdout().write_all(b"\x1b[0m")?;
+    stdout().flush()?;
 
-    println!("{:?}", eval(input)?);
+    let mut input = String::new();
+    stdin().read_line(&mut input)?;
+
+    let y = eval(input)?;
+    if !y.is_finite() {
+        // change color to green
+        stdout().write_all(b"\x1b[0;31m")?;
+    } else {
+        // change color to red
+        stdout().write_all(b"\x1b[0;32m")?;
+    }
+
+    println!("{y}");
 
     Ok(())
 }

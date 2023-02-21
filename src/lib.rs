@@ -43,7 +43,12 @@ mod eval_tests {
         );
 
         assert!(
-            // '-' has higher precedence than '^'
+            // '-' has lower precedence than '^' ...
+            close_enough(eval("-2^2").unwrap(), -4.0)
+        );
+
+        assert!(
+            // ... but this strill works
             close_enough(eval("2^-3").unwrap(), 0.125)
         );
     }

@@ -55,8 +55,8 @@ impl Operator {
             Self::Subtract => 1,
             Self::Multiply => 2,
             Self::Divide => 2,
-            Self::Exponent => 3,
-            Self::Negative => 4,
+            Self::Negative => 3,
+            Self::Exponent => 4,
         }
     }
 

@@ -29,7 +29,11 @@ pub fn parse(s: String) -> Result<Vec<Token>, CalculatorError> {
         expression.push(match c {
             '*' => Token::Op(Operator::Multiply),
             '+' => Token::Op(Operator::Add),
-            '-' => Token::Op(Operator::Subtract),
+            '-' => match expression.last() {
+                Some(Token::RParen) | Some(Token::Number(_)) => Token::Op(Operator::Subtract),
+
+                _ => Token::Op(Operator::Negative),
+            },
             '/' => Token::Op(Operator::Divide),
             '^' => Token::Op(Operator::Exponent),
             '(' => Token::LParen,

@@ -14,6 +14,7 @@ pub fn eval(s: impl Into<String>) -> Result<f64, CalculatorError> {
 pub enum CalculatorError {
     IllegalCharacter(char),
     ParseError,
+    IncorrectOperands,
     Io(std::io::Error),
 }
 impl From<std::io::Error> for CalculatorError {
@@ -22,13 +23,32 @@ impl From<std::io::Error> for CalculatorError {
     }
 }
 
-#[test]
-fn eval_test() {
-    assert_eq!(eval("5").unwrap(), 5.0);
-    assert_eq!(eval("5 + 8").unwrap(), 13.0);
+#[cfg(test)]
+mod eval_tests {
+    use super::eval;
 
-    assert!(
-        // these not exactly the same because of floating-point precision
-        (eval("(5 + 3.8)^2 - 3 * 2").unwrap() - 71.44).abs() < 0.000001
-    );
+    #[test]
+    fn eval_test() {
+        assert_eq!(eval("5").unwrap(), 5.0);
+        assert_eq!(eval("5 + 8").unwrap(), 13.0);
+
+        assert!(close_enough(eval("(5 + 3.8)^2 - 3 * 2").unwrap(), 71.44));
+    }
+
+    #[test]
+    fn eval_test_negatives() {
+        assert!(
+            // '-' has higher precedence than '/'
+            close_enough(eval("1/-5").unwrap(), -0.2)
+        );
+
+        assert!(
+            // '-' has higher precedence than '^'
+            close_enough(eval("2^-3").unwrap(), 0.125)
+        );
+    }
+
+    fn close_enough(a: f64, b: f64) -> bool {
+        (a - b).abs() < 0.0000001
+    }
 }

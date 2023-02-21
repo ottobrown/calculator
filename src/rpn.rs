@@ -4,12 +4,17 @@ use crate::Token;
 
 /// Converts an infix expression to a reverse polish notation expression
 pub fn to_rpn(exp: Vec<Token>) -> Vec<Token> {
-    let mut stack = Vec::new();
-    let mut output = Vec::new();
+    let mut stack: Vec<Token> = Vec::new();
+    let mut output: Vec<Token> = Vec::new();
 
     for token in &exp {
         match token {
             Token::Op(op) => {
+                if op.associativity() == Associativity::Unary {
+                    stack.push(*token);
+                    continue;
+                }
+
                 while let Some(Token::Op(top)) = stack.last() {
                     if (op.associativity() == Associativity::Left
                         && op.precedence() <= top.precedence())
@@ -55,10 +60,17 @@ pub fn eval_rpn(rpn: Vec<Token>) -> Result<f64, CalculatorError> {
         match token {
             Token::Number(n) => stack.push(n),
             Token::Op(o) => {
+                if o.associativity() == Associativity::Unary {
+                    let x = stack.pop().ok_or(CalculatorError::ParseError)?;
+                    stack.push(o.operate(x, None)?);
+
+                    continue;
+                }
+
                 let a = stack.pop().ok_or(CalculatorError::ParseError)?;
                 let b = stack.pop().ok_or(CalculatorError::ParseError)?;
 
-                stack.push(o.operate(b, a));
+                stack.push(o.operate(b, Some(a))?);
             }
 
             _ => {}

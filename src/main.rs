@@ -29,7 +29,7 @@ fn repl() -> Result<(), CalculatorError> {
         stdout().write_all(b"\x1b[0;32m")?;
     }
 
-    println!("{y}");
+    println!("\t {y}");
 
     Ok(())
 }

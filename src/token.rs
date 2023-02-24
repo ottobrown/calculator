@@ -21,6 +21,7 @@ pub enum Operator {
     Add,
     Subtract,
     Multiply,
+    ImpliedMultiply,
     Divide,
     Exponent,
 
@@ -33,6 +34,7 @@ impl Operator {
                 Self::Add => left + r,
                 Self::Subtract => left - r,
                 Self::Multiply => left * r,
+                Self::ImpliedMultiply => left * r,
                 Self::Divide => left / r,
                 Self::Exponent => left.powf(r),
 
@@ -55,14 +57,17 @@ impl Operator {
             Self::Subtract => 1,
             Self::Multiply => 2,
             Self::Divide => 2,
-            Self::Negative => 3,
-            Self::Exponent => 4,
+            Self::ImpliedMultiply => 3,
+            Self::Negative => 4,
+            Self::Exponent => 5,
         }
     }
 
     pub fn associativity(&self) -> Associativity {
         match self {
-            Self::Add | Self::Subtract | Self::Multiply | Self::Divide => Associativity::Left,
+            Self::Add | Self::Subtract | Self::Multiply | Self::ImpliedMultiply | Self::Divide => {
+                Associativity::Left
+            }
             Self::Exponent => Associativity::Right,
             Self::Negative => Associativity::Unary,
         }

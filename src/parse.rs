@@ -20,13 +20,23 @@ pub fn parse(s: String) -> Result<Vec<Token>, CalculatorError> {
             number.decimal_point = Some(number.digits.len() - 1);
             continue;
         } else if !number.digits.is_empty() {
+            if let Some(Token::Number(_)) = expression.last() {
+                // if two numbers are right next to each other, multiplication is implied
+                expression.push(Token::Op(Operator::ImpliedMultiply));
+            }
+
+            if let Some(Token::RParen) = expression.last() {
+                // if a number is next to a right paren, multiplication is implied
+                expression.push(Token::Op(Operator::ImpliedMultiply));
+            }
+
             expression.push(Token::Number(number.parse()));
 
             // This is marked as an unused assignment
             number = ParseNumber::default();
         }
 
-        expression.push(match c {
+        let t = match c {
             '*' => Token::Op(Operator::Multiply),
             '+' => Token::Op(Operator::Add),
             '-' => match expression.last() {
@@ -36,16 +46,38 @@ pub fn parse(s: String) -> Result<Vec<Token>, CalculatorError> {
             },
             '/' => Token::Op(Operator::Divide),
             '^' => Token::Op(Operator::Exponent),
-            '(' => Token::LParen,
+            '(' => {
+                if let Some(Token::RParen) = expression.last() {
+                    // if a left paren is next to a right paren, multiplication is implied
+                    expression.push(Token::Op(Operator::ImpliedMultiply));
+                }
+
+                if let Some(Token::Number(_)) = expression.last() {
+                    // if a left paren is right after a number, multiplication is implied
+                    expression.push(Token::Op(Operator::ImpliedMultiply));
+                }
+
+                Token::LParen
+            }
             ')' => Token::RParen,
 
             _ => return Err(CalculatorError::IllegalCharacter(c)),
-        });
+        };
+
+        expression.push(t)
     }
 
     if !number.digits.is_empty() {
+        if let Some(Token::Number(_)) = expression.last() {
+            // if two numbers are right next to each other, multiplication is implied
+            expression.push(Token::Op(Operator::ImpliedMultiply));
+        }
+        if let Some(Token::RParen) = expression.last() {
+            // if a number is next to a right paren, multiplication is implied
+            expression.push(Token::Op(Operator::ImpliedMultiply));
+        }
+
         expression.push(Token::Number(number.parse()));
-        number = ParseNumber::default();
     }
 
     Ok(expression)
@@ -110,6 +142,54 @@ mod parse_tests {
                 Token::Number(2.0),
                 Token::Op(Operator::Subtract),
                 Token::Number(355.0),
+            ]
+        );
+    }
+
+    #[test]
+    fn implied_multiplication() {
+        let exp = parse("(15)(5)".to_string()).unwrap();
+
+        assert_eq!(
+            exp,
+            vec![
+                Token::LParen,
+                Token::Number(15.0),
+                Token::RParen,
+                Token::Op(Operator::ImpliedMultiply),
+                Token::LParen,
+                Token::Number(5.0),
+                Token::RParen,
+            ]
+        );
+
+        let exp2 = parse("3(2 + 1)".to_string()).unwrap();
+
+        assert_eq!(
+            exp2,
+            vec![
+                Token::Number(3.0),
+                Token::Op(Operator::ImpliedMultiply),
+                Token::LParen,
+                Token::Number(2.0),
+                Token::Op(Operator::Add),
+                Token::Number(1.0),
+                Token::RParen,
+            ]
+        );
+
+        let exp3 = parse("(2+1)3".to_string()).unwrap();
+
+        assert_eq!(
+            exp3,
+            vec![
+                Token::LParen,
+                Token::Number(2.0),
+                Token::Op(Operator::Add),
+                Token::Number(1.0),
+                Token::RParen,
+                Token::Op(Operator::ImpliedMultiply),
+                Token::Number(3.0),
             ]
         );
     }

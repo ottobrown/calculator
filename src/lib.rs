@@ -53,6 +53,19 @@ mod eval_tests {
         );
     }
 
+    #[test]
+    fn eval_test_implied_multiplication() {
+        assert!(close_enough(eval("3(-4 + 1)").unwrap(), -9.0));
+
+        assert!(
+            // implied multiplication has higher precedence than division
+            close_enough(eval("1/(2)(5)").unwrap(), 0.1)
+        );
+        assert!(close_enough(eval("1/-(2)(5)").unwrap(), -0.1));
+
+        assert!(close_enough(eval("(4 + 1)3").unwrap(), 15.0));
+    }
+
     fn close_enough(a: f64, b: f64) -> bool {
         (a - b).abs() < 0.0000001
     }

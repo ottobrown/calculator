@@ -10,6 +10,7 @@ pub fn parse(s: String) -> Result<Vec<Token>, CalculatorError> {
 
     for c in s.chars() {
         if c.is_ascii_whitespace() {
+            end_number(&mut number, &mut expression);
             continue;
         }
 
@@ -19,22 +20,9 @@ pub fn parse(s: String) -> Result<Vec<Token>, CalculatorError> {
         } else if c == '.' {
             number.decimal_point = Some(number.digits.len() - 1);
             continue;
-        } else if !number.digits.is_empty() {
-            if let Some(Token::Number(_)) = expression.last() {
-                // if two numbers are right next to each other, multiplication is implied
-                expression.push(Token::Op(Operator::ImpliedMultiply));
-            }
-
-            if let Some(Token::RParen) = expression.last() {
-                // if a number is next to a right paren, multiplication is implied
-                expression.push(Token::Op(Operator::ImpliedMultiply));
-            }
-
-            expression.push(Token::Number(number.parse()));
-
-            // This is marked as an unused assignment
-            number = ParseNumber::default();
         }
+            
+        end_number(&mut number, &mut expression);
 
         let t = match c {
             '*' => Token::Op(Operator::Multiply),
@@ -67,20 +55,28 @@ pub fn parse(s: String) -> Result<Vec<Token>, CalculatorError> {
         expression.push(t)
     }
 
-    if !number.digits.is_empty() {
-        if let Some(Token::Number(_)) = expression.last() {
-            // if two numbers are right next to each other, multiplication is implied
-            expression.push(Token::Op(Operator::ImpliedMultiply));
-        }
-        if let Some(Token::RParen) = expression.last() {
-            // if a number is next to a right paren, multiplication is implied
-            expression.push(Token::Op(Operator::ImpliedMultiply));
-        }
-
-        expression.push(Token::Number(number.parse()));
-    }
+    end_number(&mut number, &mut expression);
 
     Ok(expression)
+}
+
+fn end_number(number: &mut ParseNumber, expression: &mut Vec<Token>) {
+    if number.digits.is_empty() {
+        return;
+    }
+
+    if let Some(Token::Number(_)) = expression.last() {
+        // if two numbers are right next to each other, multiplication is implied
+        expression.push(Token::Op(Operator::ImpliedMultiply));
+    }
+    if let Some(Token::RParen) = expression.last() {
+        // if a number is next to a right paren, multiplication is implied
+        expression.push(Token::Op(Operator::ImpliedMultiply));
+    }
+
+    expression.push(Token::Number(number.parse()));
+
+    *number = ParseNumber::default();
 }
 
 /// A base-10 number in the process of being parsed
@@ -90,7 +86,7 @@ struct ParseNumber {
     decimal_point: Option<usize>,
 }
 impl ParseNumber {
-    pub fn parse(self) -> f64 {
+    pub fn parse(&self) -> f64 {
         let mut number = 0.0;
 
         for i in 0..self.digits.len() {

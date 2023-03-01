@@ -1,18 +1,30 @@
 use crate::token::Operator;
 use crate::token::Token;
 use crate::CalculatorError;
+use crate::Env;
 
 /// Parse a `String` into a `Vec` of tokens
 #[allow(unused_assignments)]
-pub fn parse(s: String) -> Result<Vec<Token>, CalculatorError> {
+pub fn parse(s: String, env: &Env) -> Result<Vec<Token>, CalculatorError> {
     let mut expression = Vec::new();
     let mut number = ParseNumber::default();
+
+    let mut parse_symbol = Vec::new();
 
     for c in s.chars() {
         if c.is_ascii_whitespace() {
             end_number(&mut number, &mut expression);
+            end_symbol(&mut parse_symbol, &mut expression, env)?;
+
             continue;
         }
+
+        if c.is_ascii_alphabetic() || c == '_' {
+            parse_symbol.push(c);
+            continue;
+        }
+
+        end_symbol(&mut parse_symbol, &mut expression, env)?;
 
         if c.is_ascii_digit() {
             number.digits.push((c as u8) - 48);
@@ -21,7 +33,7 @@ pub fn parse(s: String) -> Result<Vec<Token>, CalculatorError> {
             number.decimal_point = Some(number.digits.len() - 1);
             continue;
         }
-            
+
         end_number(&mut number, &mut expression);
 
         let t = match c {
@@ -56,6 +68,7 @@ pub fn parse(s: String) -> Result<Vec<Token>, CalculatorError> {
     }
 
     end_number(&mut number, &mut expression);
+    end_symbol(&mut parse_symbol, &mut expression, env)?;
 
     Ok(expression)
 }
@@ -77,6 +90,36 @@ fn end_number(number: &mut ParseNumber, expression: &mut Vec<Token>) {
     expression.push(Token::Number(number.parse()));
 
     *number = ParseNumber::default();
+}
+
+fn end_symbol(
+    symbol: &mut Vec<char>,
+    expression: &mut Vec<Token>,
+    env: &Env,
+) -> Result<(), CalculatorError> {
+    if symbol.is_empty() {
+        return Ok(());
+    }
+
+    let s = symbol.iter().collect::<String>();
+    *symbol = Vec::new();
+
+    if let Some(c) = env.constants.get(&s) {
+        if let Some(Token::Number(_)) = expression.last() {
+            // if two numbers are right next to each other, multiplication is implied
+            expression.push(Token::Op(Operator::ImpliedMultiply));
+        }
+        if let Some(Token::RParen) = expression.last() {
+            // if a number is next to a right paren, multiplication is implied
+            expression.push(Token::Op(Operator::ImpliedMultiply));
+        }
+
+        expression.push(Token::Number(*c));
+
+        return Ok(());
+    }
+
+    Err(CalculatorError::UnknownSymbol(s))
 }
 
 /// A base-10 number in the process of being parsed
@@ -105,24 +148,26 @@ impl ParseNumber {
 #[cfg(test)]
 mod parse_tests {
     use super::*;
+    use crate::Env;
 
     #[test]
     fn parse_integer() {
-        let exp = parse("723".to_string()).unwrap();
+        let exp = parse("723".to_string(), &Env::default()).unwrap();
+        use crate::Env;
 
         assert_eq!(exp, vec![Token::Number(723.0)]);
     }
 
     #[test]
     fn parse_noninteger() {
-        let exp = parse("723.81".to_string()).unwrap();
+        let exp = parse("723.81".to_string(), &Env::default()).unwrap();
 
         assert_eq!(exp, vec![Token::Number(723.81)]);
     }
 
     #[test]
     fn parse_expression() {
-        let exp = parse("5 * (14 - 1)^2 - 355".to_string()).unwrap();
+        let exp = parse("5 * (14 - 1)^2 - 355".to_string(), &Env::default()).unwrap();
 
         assert_eq!(
             exp,
@@ -144,7 +189,7 @@ mod parse_tests {
 
     #[test]
     fn implied_multiplication() {
-        let exp = parse("(15)(5)".to_string()).unwrap();
+        let exp = parse("(15)(5)".to_string(), &Env::default()).unwrap();
 
         assert_eq!(
             exp,
@@ -159,7 +204,7 @@ mod parse_tests {
             ]
         );
 
-        let exp2 = parse("3(2 + 1)".to_string()).unwrap();
+        let exp2 = parse("3(2 + 1)".to_string(), &Env::default()).unwrap();
 
         assert_eq!(
             exp2,
@@ -174,7 +219,7 @@ mod parse_tests {
             ]
         );
 
-        let exp3 = parse("(2+1)3".to_string()).unwrap();
+        let exp3 = parse("(2+1)3".to_string(), &Env::default()).unwrap();
 
         assert_eq!(
             exp3,

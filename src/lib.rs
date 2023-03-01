@@ -1,13 +1,16 @@
+mod env;
 mod parse;
 mod rpn;
 pub mod token;
 
+pub use env::Env;
 pub use parse::parse;
 pub use rpn::to_rpn;
 pub use token::*;
 
 pub fn eval(s: impl Into<String>) -> Result<f64, CalculatorError> {
-    rpn::eval_rpn(to_rpn(parse(s.into())?))
+    let env = Env::default();
+    rpn::eval_rpn(to_rpn(parse(s.into(), &env)?))
 }
 
 #[derive(Debug)]
@@ -15,6 +18,7 @@ pub enum CalculatorError {
     IllegalCharacter(char),
     ParseError,
     IncorrectOperands,
+    UnknownSymbol(String),
     Io(std::io::Error),
 }
 impl From<std::io::Error> for CalculatorError {
@@ -64,6 +68,12 @@ mod eval_tests {
         assert!(close_enough(eval("1/-(2)(5)").unwrap(), -0.1));
 
         assert!(close_enough(eval("(4 + 1)3").unwrap(), 15.0));
+    }
+
+    #[test]
+    fn constants() {
+        assert!(close_enough(eval("pi").unwrap(), 3.14159265));
+        assert!(close_enough(eval("e^2").unwrap(), 7.389056098));
     }
 
     fn close_enough(a: f64, b: f64) -> bool {

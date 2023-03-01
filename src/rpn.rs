@@ -84,6 +84,7 @@ pub fn eval_rpn(rpn: Vec<Token>) -> Result<f64, CalculatorError> {
 mod rpn_tests {
     use super::*;
     use crate::parse;
+    use crate::Env;
     use crate::Operator;
     use crate::Token::*;
 
@@ -92,7 +93,7 @@ mod rpn_tests {
         let s = "6+9+(4*2+4^2)".to_string();
 
         assert_eq!(
-            to_rpn(parse(s).unwrap()),
+            to_rpn(parse(s, &Env::default()).unwrap()),
             vec![
                 Number(6.0),
                 Number(9.0),

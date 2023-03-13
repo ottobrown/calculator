@@ -19,33 +19,25 @@ impl Default for Env {
 
         let mut functions = HashMap::new();
 
-        fn f_ln(x: f64) -> f64 {
-            x.ln()
-        }
-        let ln: fn(f64) -> f64 = f_ln;
-        functions.insert("ln".to_string(), ln);
-
-        fn f_sin(x: f64) -> f64 {
-            x.sin()
-        }
-        let sin: fn(f64) -> f64 = f_sin;
-        functions.insert("sin".to_string(), sin);
-
-        fn f_cos(x: f64) -> f64 {
-            x.cos()
-        }
-        let cos: fn(f64) -> f64 = f_cos;
-        functions.insert("cos".to_string(), cos);
-
-        fn f_tan(x: f64) -> f64 {
-            x.tan()
-        }
-        let tan: fn(f64) -> f64 = f_tan;
-        functions.insert("tan".to_string(), tan);
+        make_fn(&mut functions, "ln", |x| x.ln());
+        make_fn(&mut functions, "sin", |x| x.sin());
+        make_fn(&mut functions, "cos", |x| x.cos());
+        make_fn(&mut functions, "tan", |x| x.tan());
+        make_fn(&mut functions, "sqrt", |x| x.sqrt());
+        make_fn(&mut functions, "cbrt", |x| x.cbrt());
+        make_fn(&mut functions, "acos", |x| x.acos());
+        make_fn(&mut functions, "asin", |x| x.asin());
+        make_fn(&mut functions, "atan", |x| x.atan());
 
         Self {
             constants,
             functions,
         }
     }
+}
+
+fn make_fn(map: &mut HashMap<String, fn(f64) -> f64>, name: &str, f: fn(f64) -> f64) {
+    let f_f: fn(f64) -> f64 = f;
+
+    map.insert(name.to_string(), f_f);
 }

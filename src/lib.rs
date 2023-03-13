@@ -52,7 +52,7 @@ mod eval_tests {
         );
 
         assert!(
-            // ... but this strill works
+            // ... but this still works
             close_enough(eval("2^-3").unwrap(), 0.125)
         );
     }
@@ -74,6 +74,22 @@ mod eval_tests {
     fn constants() {
         assert!(close_enough(eval("pi").unwrap(), 3.14159265));
         assert!(close_enough(eval("e^2").unwrap(), 7.389056098));
+    }
+
+    #[test]
+    fn functions() {
+        assert!(close_enough(eval("cos(pi/2)").unwrap(), 0.0));
+        assert!(close_enough(eval("cos pi").unwrap(), -1.0));
+
+        assert!(close_enough(eval("e^ln2").unwrap(), 2.0));
+
+        assert_eq!(eval("sin(1)").unwrap(), 1.0_f64.sin());
+        assert_eq!(eval("tan(1)").unwrap(), 1.0_f64.tan());
+
+        assert_eq!(eval("ln2").unwrap(), 2.0_f64.ln());
+        assert_eq!(eval("3ln2").unwrap(), 3.0 * 2.0_f64.ln());
+
+        assert_eq!(eval("ln2/ln3").unwrap(), 2.0_f64.ln() / 3.0_f64.ln());
     }
 
     fn close_enough(a: f64, b: f64) -> bool {

@@ -12,7 +12,6 @@ pub enum Token {
 pub enum Associativity {
     Left,
     Right,
-
     Unary,
 }
 
@@ -26,6 +25,8 @@ pub enum Operator {
     Exponent,
 
     Negative,
+
+    Function(fn(f64) -> f64),
 }
 impl Operator {
     pub fn operate(&self, left: f64, right: Option<f64>) -> Result<f64, CalculatorError> {
@@ -43,6 +44,7 @@ impl Operator {
 
             None => match self {
                 Self::Negative => -left,
+                Self::Function(f) => f(left),
 
                 _ => return Err(CalculatorError::IncorrectOperands),
             },
@@ -60,6 +62,7 @@ impl Operator {
             Self::ImpliedMultiply => 3,
             Self::Negative => 4,
             Self::Exponent => 5,
+            Self::Function(_) => 10,
         }
     }
 
@@ -70,6 +73,7 @@ impl Operator {
             }
             Self::Exponent => Associativity::Right,
             Self::Negative => Associativity::Unary,
+            Self::Function(_) => Associativity::Unary,
         }
     }
 }

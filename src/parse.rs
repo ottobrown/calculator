@@ -20,6 +20,8 @@ pub fn parse(s: String, env: &Env) -> Result<Vec<Token>, CalculatorError> {
         }
 
         if c.is_ascii_alphabetic() || c == '_' {
+            end_number(&mut number, &mut expression);
+
             parse_symbol.push(c);
             continue;
         }
@@ -115,6 +117,17 @@ fn end_symbol(
         }
 
         expression.push(Token::Number(*c));
+
+        return Ok(());
+    }
+
+    if let Some(f) = env.functions.get(&s) {
+        if let Some(Token::Number(_)) = expression.last() {
+            // if a number is to the left of a function, multiplication is implied
+            expression.push(Token::Op(Operator::ImpliedMultiply));
+        }
+
+        expression.push(Token::Op(Operator::Function(*f)));
 
         return Ok(());
     }

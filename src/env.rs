@@ -16,6 +16,8 @@ impl Default for Env {
         let mut constants = HashMap::new();
         constants.insert("pi".to_string(), std::f64::consts::PI);
         constants.insert("e".to_string(), std::f64::consts::E);
+        constants.insert("degrees".to_string(), std::f64::consts::PI / 180.0);
+        constants.insert("deg".to_string(), std::f64::consts::PI / 180.0);
 
         let mut functions = HashMap::new();
 

@@ -2,6 +2,9 @@
 
 A simple floating-point command line calculator
 
+Input to the calculator can be entered as command line arguments.
+If no arguments are entered, the calculator will enter a repl mode.
+
 ## Examples
 
 ```

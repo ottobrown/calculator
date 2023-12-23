@@ -1,15 +1,43 @@
 use calculator::eval;
 use calculator::CalculatorError;
 
+use std::env::args;
 use std::io::{stdin, stdout, Write};
 
 fn main() {
-    loop {
-        match repl() {
+    let mut args = args();
+    let _ = args.next();
+
+    let s: String = args.collect();
+
+    if !s.is_empty() {
+        match eval_and_print(s) {
             Ok(_) => {}
             Err(e) => eprintln!("{e:?}"),
+        };
+    } else {
+        loop {
+            match repl() {
+                Ok(_) => {}
+                Err(e) => eprintln!("{e:?}"),
+            }
         }
     }
+}
+
+fn eval_and_print(s: String) -> Result<(), CalculatorError> {
+    let y = eval(s)?;
+    if !y.is_finite() {
+        // change color to green
+        stdout().write_all(b"\x1b[0;31m")?;
+    } else {
+        // change color to red
+        stdout().write_all(b"\x1b[0;32m")?;
+    }
+
+    println!("\t {y}");
+
+    Ok(())
 }
 
 fn repl() -> Result<(), CalculatorError> {
@@ -20,16 +48,7 @@ fn repl() -> Result<(), CalculatorError> {
     let mut input = String::new();
     stdin().read_line(&mut input)?;
 
-    let y = eval(input)?;
-    if !y.is_finite() {
-        // change color to green
-        stdout().write_all(b"\x1b[0;31m")?;
-    } else {
-        // change color to red
-        stdout().write_all(b"\x1b[0;32m")?;
-    }
-
-    println!("\t {y}");
+    eval_and_print(input)?;
 
     Ok(())
 }
